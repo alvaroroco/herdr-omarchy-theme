@@ -29,6 +29,11 @@ The mod runs `omarchy-theme-color`, reads Omarchy's state in
 version, an Omarchy theme-set hook, is tagged
 [`v1-hook`](https://github.com/alvaroroco/herdr-omarchy-theme/tree/v1-hook).
 
+## Contributing
+
+Issues are welcome; code changes come in as pull requests. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 MIT
