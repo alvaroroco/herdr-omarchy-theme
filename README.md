@@ -20,15 +20,14 @@ Ask your agent:
 Or run it yourself:
 
 ```sh
-d=~/.config/herdr-app/mods/omarchy-theme
-u=https://raw.githubusercontent.com/alvaroroco/herdr-omarchy-theme/main/mods/omarchy-theme
-mkdir -p "$d" && curl -fsSL "$u/main.js" -o "$d/main.js" && curl -fsSL "$u/mod.json" -o "$d/mod.json" &&
-  herdr-app check "$d" && herdr-app do mod.open --name omarchy-theme && herdr-app do app.theme --name omarchy
+git clone https://github.com/alvaroroco/herdr-omarchy-theme.git
+cp -r herdr-omarchy-theme/mods/omarchy-theme ~/.config/herdr-app/mods/
+herdr-app check ~/.config/herdr-app/mods/omarchy-theme
+herdr-app do mod.open --name omarchy-theme
 ```
 
-This downloads the two files, checks them, opens the pill and switches Herdr
-to the `omarchy` theme. Run it again to update. The pill reopens on every
-start; `×` closes it and stops the syncing.
+Then pick **omarchy** in Settings → Look (or click `use` on the pill). The
+pill reopens on every start; `×` closes it and stops the syncing.
 
 The mod runs `omarchy-theme-color`, reads Omarchy's state in
 `~/.local/state/omarchy/current` and Herdr's `layouts/.state/`, and writes
