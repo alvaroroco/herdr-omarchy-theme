@@ -1,0 +1,51 @@
+name: Bug report
+description: Herdr doesn't follow your Omarchy theme, or the pill misbehaves.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what Herdr did instead.
+      placeholder: |
+        Ran `omarchy theme set catppuccin` with the omarchy theme picked in Herdr.
+        Expected Herdr to turn catppuccin; it kept the previous colors.
+    validations:
+      required: true
+  - type: input
+    id: omarchy-theme
+    attributes:
+      label: Omarchy theme
+      description: The theme you switched to (and from, if it matters).
+      placeholder: theme-liftoff → catppuccin
+    validations:
+      required: true
+  - type: input
+    id: herdr-version
+    attributes:
+      label: Herdr version
+      description: Output of `herdr-app --version`.
+      placeholder: herdr-app 0.1.9
+    validations:
+      required: true
+  - type: input
+    id: omarchy-version
+    attributes:
+      label: Omarchy version
+      description: Output of `omarchy version`.
+      placeholder: 4.0.6-1
+    validations:
+      required: true
+  - type: textarea
+    id: status
+    attributes:
+      label: herdr-app status
+      description: Output of `herdr-app status` right after it happened.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: If it's about how Herdr looks, attach `herdr-app shot` output.
