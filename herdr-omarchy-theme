@@ -1,0 +1,155 @@
+#!/bin/bash
+
+# Keep Herdr's "omarchy" theme in step with the active Omarchy theme.
+#
+# Writes the Omarchy palette to Herdr's themes/omarchy.json, which Herdr offers
+# in Settings -> Look like any other theme. Installed as an Omarchy theme-set
+# hook, so it runs after every `omarchy theme set`.
+#
+# Herdr reads a theme file when the theme is picked, not when the file changes.
+# So when the window is showing "omarchy", it is picked again through a preset
+# of the same lightness, which makes Herdr load the new file.
+
+set -o pipefail
+
+COLORS_TOML="${OMARCHY_COLORS_TOML:-$HOME/.local/state/omarchy/current/theme/colors.toml}"
+HERDR_APP_HOME="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"
+THEME_NAME="omarchy"
+THEME_FILE="$HERDR_APP_HOME/themes/$THEME_NAME.json"
+
+herdr_app() {
+  if command -v herdr-app >/dev/null 2>&1; then
+    timeout 5 herdr-app "$@"
+  elif [[ -x $HOME/.local/bin/herdr-app ]]; then
+    timeout 5 "$HOME/.local/bin/herdr-app" "$@"
+  else
+    return 127
+  fi
+}
+
+declare -A color
+
+load_palette() {
+  local key value
+
+  while IFS=$'\t' read -r key value; do
+    color[$key]="$value"
+  done < <(omarchy-theme-color --file "$COLORS_TOML" --all)
+}
+
+hex() {
+  local value="${color[$1]:-}"
+
+  if [[ ! $value =~ ^#[0-9A-Fa-f]{6}$ ]]; then
+    echo "herdr-omarchy-theme: $1 is not a #rrggbb color: '$value'" >&2
+    return 1
+  fi
+
+  printf '"%s"' "${value,,}"
+}
+
+# Prints the theme JSON, or fails without output when a color is missing.
+render_theme() {
+  local i value row1 row2 background foreground selection cursor accent
+  local -a ansi=()
+
+  for i in {0..15}; do
+    value=$(hex "color$i") || return 1
+    ansi+=("$value")
+  done
+
+  background=$(hex background) || return 1
+  foreground=$(hex foreground) || return 1
+  selection=$(hex selection_background) || return 1
+  cursor=$(hex cursor) || return 1
+  accent=$(hex accent) || return 1
+
+  row1=$(IFS=,; echo "${ansi[*]:0:8}")
+  row2=$(IFS=,; echo "${ansi[*]:8:8}")
+
+  cat <<JSON
+{
+  "background": $background,
+  "foreground": $foreground,
+  "selection": $selection,
+  "cursor": $cursor,
+  "ansi": [
+    ${row1//,/, },
+    ${row2//,/, }
+  ],
+  "colors": {
+    "accent": $accent
+  }
+}
+JSON
+}
+
+write_theme() {
+  local tmp
+
+  mkdir -p "${THEME_FILE%/*}"
+  tmp=$(mktemp "$THEME_FILE.XXXXXX") || return 1
+
+  if ! render_theme >"$tmp"; then
+    rm -f "$tmp"
+    return 1
+  fi
+
+  if cmp -s "$tmp" "$THEME_FILE"; then
+    rm -f "$tmp"
+    return 2
+  fi
+
+  mv "$tmp" "$THEME_FILE"
+}
+
+# True when the shown layout, or settings.json where the layout sets none,
+# has "omarchy" as its theme (plain or in either the light or dark half).
+omarchy_is_selected() {
+  local status layout source
+
+  status=$(herdr_app status 2>/dev/null) || return 1
+  layout=$(jq -r '.layout // empty' <<<"$status" 2>/dev/null)
+
+  for source in "$HERDR_APP_HOME/layouts/.state/$layout.json" "$HERDR_APP_HOME/settings.json"; do
+    [[ -n $layout && -f $source ]] || continue
+    if jq -e --arg name "$THEME_NAME" '
+        .theme | select(. != null)
+        | (if type == "object" then [.light, .dark] else [.] end)
+        | index($name) != null
+      ' "$source" >/dev/null 2>&1; then
+      return 0
+    fi
+    # The layout's own pick wins; settings.json only applies without one.
+    jq -e '.theme != null' "$source" >/dev/null 2>&1 && return 1
+  done
+
+  return 1
+}
+
+reload_in_window() {
+  local preset="graphite"
+
+  omarchy_is_selected || return 0
+
+  [[ ${color[mode]:-dark} == "light" ]] && preset="paper"
+
+  herdr_app do app.theme --name "$preset" >/dev/null 2>&1 &&
+    herdr_app do app.theme --name "$THEME_NAME" >/dev/null 2>&1
+}
+
+main() {
+  [[ -f $COLORS_TOML ]] || exit 0
+  [[ -d $HERDR_APP_HOME ]] || exit 0
+
+  load_palette
+
+  write_theme
+  case $? in
+    0) reload_in_window ;;
+    2) ;;
+    *) exit 1 ;;
+  esac
+}
+
+main "$@"

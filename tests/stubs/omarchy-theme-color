@@ -1,0 +1,5 @@
+#!/bin/bash
+# Test double: `--file <name>.toml --all` prints the fixture <name>.tsv, the
+# palette the real omarchy-theme-color resolved for that theme.
+[[ $1 == --file && $3 == --all ]] || exit 2
+cat "${2%.toml}.tsv"
