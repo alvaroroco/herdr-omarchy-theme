@@ -15,8 +15,8 @@ echo "Removed $HOOK_PATH"
 # its default dark and light presets before the file goes away.
 if grep -qs '"omarchy"' "$HERDR_APP_HOME"/layouts/.state/*.json "$HERDR_APP_HOME/settings.json" &&
   command -v herdr-app >/dev/null 2>&1 && timeout 5 herdr-app status >/dev/null 2>&1; then
-  timeout 5 herdr-app do app.theme --name graphite >/dev/null 2>&1 || true
-  timeout 5 herdr-app do app.theme --name paper >/dev/null 2>&1 || true
+  timeout 5 herdr-app "do" app.theme --name graphite >/dev/null 2>&1 || true
+  timeout 5 herdr-app "do" app.theme --name paper >/dev/null 2>&1 || true
   echo "Switched Herdr back to its default themes (graphite / paper)."
 fi
 

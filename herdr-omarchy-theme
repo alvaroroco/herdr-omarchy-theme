@@ -134,8 +134,8 @@ reload_in_window() {
 
   [[ ${color[mode]:-dark} == "light" ]] && preset="paper"
 
-  herdr_app do app.theme --name "$preset" >/dev/null 2>&1 &&
-    herdr_app do app.theme --name "$THEME_NAME" >/dev/null 2>&1
+  herdr_app "do" app.theme --name "$preset" >/dev/null 2>&1 &&
+    herdr_app "do" app.theme --name "$THEME_NAME" >/dev/null 2>&1
 }
 
 main() {
